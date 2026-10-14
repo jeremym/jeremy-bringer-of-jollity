@@ -142,7 +142,12 @@ async function playMusic() {
   let done;
   const finished = new Promise((resolve) => (done = resolve));
 
+  let stopped = false;
   const stop = () => {
+    // Runs once: the audio's exit handler fires after q, and a second pause
+    // of stdin would pull it out from under the menu that's back on screen.
+    if (stopped) return;
+    stopped = true;
     clearInterval(timer);
     audio?.kill();
     process.stdin.off('data', onKey);
@@ -220,6 +225,31 @@ async function playMusic() {
   await finished;
 }
 
+// ---------- Update check ----------
+
+const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url)));
+
+// npx can keep running an old cached copy, so ask the registry what's newest.
+// Offline or slow: skip quietly rather than hold up the card.
+async function latestVersion() {
+  try {
+    const res = await fetch(`https://registry.npmjs.org/${pkg.name}/latest`, { signal: AbortSignal.timeout(1500) });
+    if (!res.ok) return null;
+    const { version } = await res.json();
+    return newer(version, pkg.version) ? version : null;
+  } catch {
+    return null;
+  }
+}
+
+function newer(a, b) {
+  const [x, y] = [a, b].map((v) => v.split('-')[0].split('.').map(Number));
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
+  return false;
+}
+
+const update = await latestVersion();
+
 // ---------- Business card ----------
 
 const links = [
@@ -236,6 +266,10 @@ function card() {
   console.log(' ' + bold(gradient('Jeremy Mooer', [255, 209, 102], [6, 214, 160])));
   console.log(' ' + dim('✨ Bringer of Jollity ✨'));
   console.log();
+  if (update) {
+    console.log(` ${bold(`🎁 v${update} is out`)} ${dim(`(you're on v${pkg.version})`)} — run ${bold(`npx ${pkg.name}@latest`)}`);
+    console.log();
+  }
 }
 
 card();
