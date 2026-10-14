@@ -1,6 +1,6 @@
 {
   "name": "jeremy-bringer-of-jollity",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Jeremy Mooer's terminal business card, with a Strudel tune.",
   "type": "module",
   "bin": {
