@@ -1,0 +1,39 @@
+{
+  "name": "jeremy-bringer-of-jollity",
+  "version": "0.1.0",
+  "description": "Jeremy Mooer's terminal business card, with a Strudel tune.",
+  "type": "module",
+  "bin": {
+    "jeremy-bringer-of-jollity": "index.js"
+  },
+  "files": [
+    "index.js",
+    "media/"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "art": "node scripts/build-art.js art/profile.png"
+  },
+  "keywords": [
+    "business-card",
+    "cli",
+    "npx",
+    "strudel"
+  ],
+  "author": "Jeremy Mooer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremym/jeremy-bringer-of-jollity.git"
+  },
+  "homepage": "https://github.com/jeremym/jeremy-bringer-of-jollity#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@inquirer/select": "^4.3.1"
+  },
+  "devDependencies": {
+    "pngjs": "7.0.0"
+  }
+}
