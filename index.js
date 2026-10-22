@@ -44,6 +44,25 @@ function openUrl(url) {
   spawn(cmd, args, { stdio: 'ignore', detached: true }).unref();
 }
 
+// Put text on the system clipboard. Returns true if it took.
+function copyToClipboard(text) {
+  const candidates =
+    process.platform === 'darwin'
+      ? [['pbcopy', []]]
+      : process.platform === 'win32'
+        ? [['clip', []]]
+        : [
+            ['wl-copy', []],
+            ['xclip', ['-selection', 'clipboard']],
+            ['xsel', ['--clipboard', '--input']],
+          ];
+  for (const [cmd, args] of candidates) {
+    const res = spawnSync(cmd, args, { input: text });
+    if (!res.error && res.status === 0) return true;
+  }
+  return false;
+}
+
 // ---------- Music: the Strudel tune with its code lighting up ----------
 
 // Windows has no command-line mp3 player, but every Windows 10/11 machine has
@@ -259,6 +278,62 @@ const links = [
   { name: '📧 Email', value: 'mailto:jeremy.mooer@gmail.com' },
 ];
 
+// Projects with a macOS app you can install from the command line (Homebrew cask).
+// Selecting one opens a submenu: visit the site, copy the install command, or run it.
+const apps = [
+  {
+    name: '🔐 Clipy Secure',
+    description: 'Privacy-first, AES-GCM encrypted clipboard manager for macOS',
+    website: 'https://jeremym.github.io/clipy-secure/',
+    install: 'brew install --cask jeremym/tap/clipy-secure',
+  },
+  {
+    name: '✉️  Mailto Segue',
+    description: 'Routes mailto: links to the right account — macOS (v0.0.1 on Homebrew; v1.0 code-complete, in final verification)',
+    website: 'https://github.com/jeremym/mailto-segue',
+    install: 'brew install --cask jeremym/tap/mailto-segue',
+  },
+];
+
+// The submenu shown when a project is selected.
+async function appMenu(app) {
+  while (true) {
+    const action = await select({
+      message: app.name.trim(),
+      pageSize: 20,
+      loop: true,
+      choices: [
+        { name: '🌐 Open website', value: 'website' },
+        { name: '📋 Copy install command', value: 'copy', description: app.install },
+        { name: '⬇️  Install now', value: 'install', description: `Runs: ${app.install}` },
+        { name: '↩ Back', value: 'back' },
+      ],
+    });
+    if (action === 'back') return;
+    if (action === 'website') {
+      openUrl(app.website);
+    } else if (action === 'copy') {
+      const ok = copyToClipboard(app.install);
+      console.log(
+        ok
+          ? ` ${bold('📋 Copied.')} Paste it into your terminal to install.`
+          : ` ${dim('Could not reach the clipboard — run this yourself:')}\n   ${bold(app.install)}`,
+      );
+    } else if (action === 'install') {
+      const [cmd, ...args] = app.install.split(' ');
+      console.log(` ${dim(`$ ${app.install}`)}\n`);
+      const res = spawnSync(cmd, args, { stdio: 'inherit' });
+      console.log(
+        res.error
+          ? ` ${dim(`Couldn't start ${cmd} — is Homebrew installed?`)}`
+          : res.status === 0
+            ? ` ${bold('✅ Done.')}`
+            : ` ${dim(`${cmd} exited with code ${res.status}.`)}`,
+      );
+    }
+  }
+}
+
 function card() {
   console.clear();
   console.log(portrait());
@@ -277,9 +352,14 @@ try {
   while (true) {
     const choice = await select({
       message: 'Where to?',
+      // Show every option at once — nothing scrolled off the bottom — while
+      // keeping arrow-key wrap-around (loop) so the list still rolls at the ends.
+      pageSize: 20,
+      loop: true,
       choices: [
-        ...links,
         { name: '🎵 Music experiment', value: 'music', description: 'A Strudel tune, with its code lighting up as it plays' },
+        ...links,
+        ...apps.map((app) => ({ name: app.name, value: app, description: app.description })),
         { name: '❌ Exit', value: 'exit' },
       ],
     });
@@ -287,6 +367,8 @@ try {
     if (choice === 'music') {
       await playMusic();
       card();
+    } else if (typeof choice === 'object') {
+      await appMenu(choice);
     } else {
       openUrl(choice);
     }
