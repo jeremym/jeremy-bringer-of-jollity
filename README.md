@@ -6,13 +6,14 @@ Jeremy Mooer's business card for the terminal.
 npx jeremy-bringer-of-jollity
 ```
 
-It shows a portrait, then a menu of links:
+It shows a portrait, then a menu:
 
+- **Music experiment**: a tune written in [Strudel](https://strudel.cc/), played with its code lighting up as it sounds, the same way the Strudel editor highlights it
 - Overtone Foundry
 - LinkedIn
 - GitHub
 - Email
-- **Music experiment**: a tune written in [Strudel](https://strudel.cc/), played with its code lighting up as it sounds, the same way the Strudel editor highlights it
+- **Clipy Secure** and **Mailto Segue**: macOS apps. Selecting one opens a submenu — open its website, copy the `brew install` command to the clipboard, or run the install right there.
 
 Press `q` or `Esc` to stop the music.
 
